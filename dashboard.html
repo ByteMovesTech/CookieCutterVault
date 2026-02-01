@@ -5,32 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cookie Cutter Vault</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f6f6;
-      padding: 1rem;
-    }
+    body { font-family: Arial; padding: 1rem; background: #f6f6f6; }
     h1 { text-align: center; }
-    form, .item {
-      background: white;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-    }
-    input, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 6px;
-    }
-    button {
-      background: #e67e22;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-    .item small {
-      color: #555;
-    }
+    form, .item { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+    input, button { width: 100%; padding: 8px; margin-top: 6px; }
+    button { background: #e67e22; color: white; border: none; border-radius: 5px; }
+    .item small { color: #555; }
   </style>
 </head>
 <body>
@@ -39,52 +19,51 @@
 
 <form id="addForm">
   <input id="name" placeholder="Name (Santa, Star, etc)" required />
-  <input id="category" placeholder="Category (Christmas, Shape, Theme)" />
+  <input id="category" placeholder="Category" />
   <input id="description" placeholder="Description" />
-  <input id="bin" placeholder="Storage Bin (e.g. Bin 5)" />
-  <button>Add Cookie Cutter</button>
+  <input id="bin" placeholder="Bin" />
+  <button type="submit">Add Cookie Cutter</button>
 </form>
 
 <div id="list"></div>
-
 <button onclick="logout()">Log Out</button>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
   const firebaseConfig = {
-  apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
-  authDomain: "cookiecuttervault.firebaseapp.com",
-  projectId: "cookiecuttervault",
-  storageBucket: "cookiecuttervault.firebasestorage.app",
-  messagingSenderId: "900114441261",
-  appId: "1:900114441261:web:fd4f37af79e928933344a4"
-};
+    apiKey: "PASTE_YOURS",
+    authDomain: "PASTE_YOURS",
+    projectId: "PASTE_YOURS",
+    storageBucket: "PASTE_YOURS",
+    messagingSenderId: "PASTE_YOURS",
+    appId: "PASTE_YOURS"
+  };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  const addForm = document.getElementById("addForm");
+  const list = document.getElementById("list");
+  const nameInput = document.getElementById("name");
+  const categoryInput = document.getElementById("category");
+  const descriptionInput = document.getElementById("description");
+  const binInput = document.getElementById("bin");
+
   // Redirect if not logged in
   auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "index.html";
-    } else {
-      loadCutters(user.uid);
-    }
+    if (!user) window.location.href = "index.html";
+    else loadCutters(user.uid);
   });
 
-  // Load user's cookie cutters
+  // Load cookie cutters
   function loadCutters(uid) {
     db.collection("cookieCutters")
       .where("userId", "==", uid)
-      .orderBy("createdAt", "desc")
       .onSnapshot(snapshot => {
-        const list = document.getElementById("list");
         list.innerHTML = "";
         snapshot.forEach(doc => {
           const d = doc.data();
@@ -102,20 +81,23 @@
   }
 
   // Add cookie cutter
-  document.getElementById("addForm").addEventListener("submit", e => {
+  addForm.addEventListener("submit", e => {
     e.preventDefault();
     const user = auth.currentUser;
+    if (!user) return;
 
     db.collection("cookieCutters").add({
       userId: user.uid,
-      name: name.value,
-      category: category.value,
-      description: description.value,
-      bin: bin.value,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      name: nameInput.value,
+      category: categoryInput.value,
+      description: descriptionInput.value,
+      bin: binInput.value
+    }).then(() => {
+      addForm.reset();
+    }).catch(err => {
+      console.error(err);
+      alert("Error adding cookie cutter: " + err.message);
     });
-
-    addForm.reset();
   });
 
   // Delete cookie cutter
@@ -123,11 +105,11 @@
     db.collection("cookieCutters").doc(id).delete();
   }
 
-  // Log out
+  // Logout
   function logout() {
     auth.signOut();
   }
 </script>
 
 </body>
-  </html>
+</html>
