@@ -3,216 +3,87 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cookie Cutter Vault</title>
+<title>Cookie Cutter Vault - Login</title>
 <style>
-body { font-family: Arial; padding: 1rem; background: #f6f6f6; }
-h1 { text-align: center; }
-form, .container { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
-input, button { padding: 8px; margin-top: 6px; box-sizing: border-box; }
-button { background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; }
-#search { width: 100%; margin-bottom: 10px; }
-
-/* Table styling */
-.table-container { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; cursor: pointer; }
-tr:hover { background-color: #f1f1f1; }
-th { background-color: #f8f8f8; }
-
-/* Highlight search matches */
-.highlight { background-color: #ffff66; }
-
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  input, button { width: 100%; font-size: 14px; }
-  th, td { font-size: 14px; padding: 6px; }
-}
+body { font-family: Arial; background: #f6f6f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+.container { background: #fff; padding: 2rem; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+h1 { text-align: center; margin-bottom: 1.5rem; }
+input { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
+button { width: 100%; padding: 10px; margin-top: 12px; background: #e67e22; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+button:hover { background: #cf6c13; }
+#error { color: red; margin-top: 10px; text-align: center; }
 </style>
 </head>
 <body>
 
-<h1>🍪 Cookie Cutter Vault</h1>
-
-<form id="addForm">
-  <input id="name" placeholder="Name (Santa, Star, etc)" required />
-  <input id="category" placeholder="Category" />
-  <input id="description" placeholder="Description" />
-  <input id="bin" placeholder="Bin" />
-  <button type="submit">Add Cookie Cutter</button>
-</form>
-
-<input id="search" placeholder="Search cookie cutters..." />
-
-<div class="container table-container">
-  <table>
-    <thead>
-      <tr>
-        <th data-column="name">Name</th>
-        <th data-column="category">Category</th>
-        <th data-column="description">Description</th>
-        <th data-column="bin">Bin</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="list"></tbody>
-  </table>
+<div class="container">
+  <h1>Cookie Cutter Vault</h1>
+  <input id="email" type="email" placeholder="Email" required />
+  <input id="password" type="password" placeholder="Password" required />
+  <button id="loginBtn">Log In</button>
+  <button id="signupBtn">Sign Up</button>
+  <div id="error"></div>
 </div>
 
-<button onclick="logout()">Log Out</button>
-
-<!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- Include your config file -->
 <script src="firebase-config.js"></script>
 
 <script>
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const signupBtn = document.getElementById("signupBtn");
+const errorDiv = document.getElementById("error");
 
 // Persist login
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .then(() => console.log("Auth persistence set to LOCAL"))
   .catch(err => console.error(err));
 
-const addForm = document.getElementById("addForm");
-const list = document.getElementById("list");
-const nameInput = document.getElementById("name");
-const categoryInput = document.getElementById("category");
-const descriptionInput = document.getElementById("description");
-const binInput = document.getElementById("bin");
-const searchInput = document.getElementById("search");
-
-let cuttersData = [];
-let sortColumn = null;
-let sortAsc = true;
-
-// Redirect if not logged in
+// Redirect if already logged in
 auth.onAuthStateChanged(user => {
   if (user && user.uid) {
-    loadCutters(user.uid);
-  } else {
-    window.location.href = "index.html";
+    window.location.href = "dashboard.html";
   }
 });
 
-// Load cookie cutters
-function loadCutters(uid) {
-  db.collection("cookieCutters")
-    .where("userId", "==", uid)
-    .onSnapshot(snapshot => {
-      cuttersData = [];
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        d.id = doc.id;
-        cuttersData.push(d);
-      });
-      renderList(cuttersData);
+// Log in
+loginBtn.addEventListener("click", () => {
+  errorDiv.textContent = "";
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  if (!email || !password) return;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      window.location.href = "dashboard.html";
+    })
+    .catch(err => {
+      console.error(err);
+      errorDiv.textContent = err.message;
     });
-}
-
-// Render table rows with search highlight
-function renderList(data) {
-  const term = searchInput.value.toLowerCase();
-  list.innerHTML = "";
-  data.forEach(d => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${highlightMatch(d.name, term)}</td>
-      <td>${highlightMatch(d.category || "", term)}</td>
-      <td>${highlightMatch(d.description || "", term)}</td>
-      <td>${highlightMatch(d.bin || "", term)}</td>
-      <td>
-        <button onclick="editItem('${d.id}')">Edit</button>
-        <button onclick="deleteItem('${d.id}')">Delete</button>
-      </td>
-    `;
-    list.appendChild(row);
-  });
-}
-
-// Highlight search matches
-function highlightMatch(text, term) {
-  if (!term) return text;
-  const re = new RegExp(`(${term})`, "gi");
-  return text.replace(re, '<span class="highlight">$1</span>');
-}
-
-// Add cookie cutter
-addForm.addEventListener("submit", e => {
-  e.preventDefault();
-  const user = auth.currentUser;
-  if (!user) return;
-
-  db.collection("cookieCutters").add({
-    userId: user.uid,
-    name: nameInput.value,
-    category: categoryInput.value,
-    description: descriptionInput.value,
-    bin: binInput.value
-  }).then(() => addForm.reset())
-    .catch(err => { console.error(err); alert("Error adding cookie cutter: " + err.message); });
 });
 
-// Delete cookie cutter
-function deleteItem(id) {
-  db.collection("cookieCutters").doc(id).delete();
-}
+// Sign up (creates new account)
+signupBtn.addEventListener("click", () => {
+  errorDiv.textContent = "";
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  if (!email || !password) return;
 
-// Edit cookie cutter
-function editItem(id) {
-  const item = cuttersData.find(c => c.id === id);
-  if (!item) return;
-  const newName = prompt("Name:", item.name);
-  if (newName === null) return;
-  const newCategory = prompt("Category:", item.category || "");
-  const newDescription = prompt("Description:", item.description || "");
-  const newBin = prompt("Bin:", item.bin || "");
-
-  db.collection("cookieCutters").doc(id).update({
-    name: newName,
-    category: newCategory,
-    description: newDescription,
-    bin: newBin
-  });
-}
-
-// Search/filter
-searchInput.addEventListener("input", () => {
-  const term = searchInput.value.toLowerCase();
-  const filtered = cuttersData.filter(c =>
-    c.name.toLowerCase().includes(term) ||
-    (c.category || "").toLowerCase().includes(term) ||
-    (c.description || "").toLowerCase().includes(term) ||
-    (c.bin || "").toLowerCase().includes(term)
-  );
-  renderList(filtered);
-});
-
-// Column sorting
-document.querySelectorAll("th[data-column]").forEach(th => {
-  th.addEventListener("click", () => {
-    const column = th.dataset.column;
-    if (sortColumn === column) sortAsc = !sortAsc;
-    else { sortColumn = column; sortAsc = true; }
-    const sorted = [...cuttersData].sort((a, b) => {
-      const valA = (a[column] || "").toLowerCase();
-      const valB = (b[column] || "").toLowerCase();
-      if (valA < valB) return sortAsc ? -1 : 1;
-      if (valA > valB) return sortAsc ? 1 : -1;
-      return 0;
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      window.location.href = "dashboard.html";
+    })
+    .catch(err => {
+      console.error(err);
+      errorDiv.textContent = err.message;
     });
-    renderList(sorted);
-  });
 });
-
-// Logout
-function logout() {
-  auth.signOut();
-}
 </script>
 
 </body>
