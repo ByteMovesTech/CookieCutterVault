@@ -1,5 +1,3 @@
-alert("🔥 app.js is running");
-
 // 🔥 PASTE YOUR REAL FIREBASE CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
