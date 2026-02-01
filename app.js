@@ -27,7 +27,7 @@ form.addEventListener("submit", (e) => {
 
   auth.signInWithEmailAndPassword(email, password)
     .then(() => {
-      alert("✅ Login successful!");
+      window.location.href = "dashboard.html";
       // Next step will redirect to dashboard
     })
     .catch((error) => {
