@@ -94,16 +94,16 @@ auth.onAuthStateChanged(user => {
 // Load cookie cutters
 function loadCutters(uid) {
   db.collection("cookieCutters")
-    .where("userId", "==", uid)
-    .onSnapshot(snapshot => {
-      cuttersData = [];
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        d.id = doc.id;
-        cuttersData.push(d);
-      });
-      renderList(cuttersData);
+  .onSnapshot(snapshot => {
+    cuttersData = [];
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      d.id = doc.id;
+      cuttersData.push(d);
     });
+    renderList(cuttersData);
+  });
+  
 }
 
 // Render table rows with search highlight
