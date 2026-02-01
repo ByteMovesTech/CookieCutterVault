@@ -13,15 +13,6 @@ const firebaseConfig = {
   appId: "1:900114441261:web:fd4f37af79e928933344a4"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// TODO: Replace with your Firebase config
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-};
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
