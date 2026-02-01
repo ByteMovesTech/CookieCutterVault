@@ -21,7 +21,6 @@ button:hover { background: #cf6c13; }
   <input id="email" type="email" placeholder="Email" required />
   <input id="password" type="password" placeholder="Password" required />
   <button id="loginBtn">Log In</button>
-  <button id="signupBtn">Sign Up</button>
   <div id="error"></div>
 </div>
 
@@ -36,7 +35,6 @@ const auth = firebase.auth();
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
-const signupBtn = document.getElementById("signupBtn");
 const errorDiv = document.getElementById("error");
 
 // Persist login
@@ -61,18 +59,6 @@ loginBtn.addEventListener("click", () => {
   if (!email || !password) return;
 
   auth.signInWithEmailAndPassword(email, password)
-    .then(() => { window.location.href = "dashboard.html"; })
-    .catch(err => { console.error(err); errorDiv.textContent = err.message; });
-});
-
-// Sign up (creates new account)
-signupBtn.addEventListener("click", () => {
-  errorDiv.textContent = "";
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-  if (!email || !password) return;
-
-  auth.createUserWithEmailAndPassword(email, password)
     .then(() => { window.location.href = "dashboard.html"; })
     .catch(err => { console.error(err); errorDiv.textContent = err.message; });
 });
