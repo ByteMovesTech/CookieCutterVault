@@ -13,9 +13,7 @@ button { background: #e67e22; color: white; border: none; border-radius: 5px; cu
 #search { width: 100%; margin-bottom: 10px; }
 
 /* Table styling */
-.table-container {
-  overflow-x: auto;
-}
+.table-container { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 600px; }
 th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; cursor: pointer; }
 tr:hover { background-color: #f1f1f1; }
@@ -62,26 +60,20 @@ th { background-color: #f8f8f8; }
 
 <button onclick="logout()">Log Out</button>
 
+<!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Include your config file -->
+<script src="firebase-config.js"></script>
+
 <script>
-const firebaseConfig = {
- apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
- authDomain: "cookiecuttervault.firebaseapp.com",
-  projectId: "cookiecuttervault",
-  storageBucket: "cookiecuttervault.firebasestorage.app",
-  messagingSenderId: "900114441261",
-  appId: "1:900114441261:web:fd4f37af79e928933344a4"
-};
-
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Ensure login persists across reloads
+// Persist login
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .then(() => console.log("Auth persistence set to LOCAL"))
   .catch(err => console.error(err));
@@ -98,7 +90,7 @@ let cuttersData = [];
 let sortColumn = null;
 let sortAsc = true;
 
-// Redirect if not logged in and load cutters
+// Redirect if not logged in
 auth.onAuthStateChanged(user => {
   if (user && user.uid) {
     loadCutters(user.uid);
