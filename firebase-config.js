@@ -1,9 +1,9 @@
 // firebase-config.js
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
+  authDomain: "cookiecuttervault.firebaseapp.com",
+  projectId: "cookiecuttervault",
+  storageBucket: "cookiecuttervault.firebasestorage.app",
+  messagingSenderId: "900114441261",
+  appId: "1:900114441261:web:fd4f37af79e928933344a4"
 };
