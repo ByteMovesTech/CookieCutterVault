@@ -1,17 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cookie Cutter Vault</title>
-  <style>
-    body { font-family: Arial; padding: 1rem; background: #f6f6f6; }
-    h1 { text-align: center; }
-    form, .item { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
-    input, button { width: 100%; padding: 8px; margin-top: 6px; }
-    button { background: #e67e22; color: white; border: none; border-radius: 5px; }
-    .item small { color: #555; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cookie Cutter Vault</title>
+<style>
+body { font-family: Arial; padding: 1rem; background: #f6f6f6; }
+h1 { text-align: center; }
+form, .container { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+input, button { padding: 8px; margin-top: 6px; box-sizing: border-box; }
+button { background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; }
+#search { width: 100%; margin-bottom: 10px; }
+
+/* Table styling */
+.table-container {
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; cursor: pointer; }
+tr:hover { background-color: #f1f1f1; }
+th { background-color: #f8f8f8; }
+
+/* Highlight search matches */
+.highlight { background-color: #ffff66; }
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  input, button { width: 100%; font-size: 14px; }
+  th, td { font-size: 14px; padding: 6px; }
+}
+</style>
 </head>
 <body>
 
@@ -25,7 +43,23 @@
   <button type="submit">Add Cookie Cutter</button>
 </form>
 
-<div id="list"></div>
+<input id="search" placeholder="Search cookie cutters..." />
+
+<div class="container table-container">
+  <table>
+    <thead>
+      <tr>
+        <th data-column="name">Name</th>
+        <th data-column="category">Category</th>
+        <th data-column="description">Description</th>
+        <th data-column="bin">Bin</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
+</div>
+
 <button onclick="logout()">Log Out</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -33,82 +67,151 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  const firebaseConfig = {
-  apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
-  authDomain: "cookiecuttervault.firebaseapp.com",
-  projectId: "cookiecuttervault",
-  storageBucket: "cookiecuttervault.firebasestorage.app",
-  messagingSenderId: "900114441261",
-  appId: "1:900114441261:web:fd4f37af79e928933344a4"
+const firebaseConfig = {
+  apiKey: "PASTE_YOURS",
+  authDomain: "PASTE_YOURS",
+  projectId: "PASTE_YOURS",
+  storageBucket: "PASTE_YOURS",
+  messagingSenderId: "PASTE_YOURS",
+  appId: "PASTE_YOURS"
 };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  const addForm = document.getElementById("addForm");
-  const list = document.getElementById("list");
-  const nameInput = document.getElementById("name");
-  const categoryInput = document.getElementById("category");
-  const descriptionInput = document.getElementById("description");
-  const binInput = document.getElementById("bin");
+const addForm = document.getElementById("addForm");
+const list = document.getElementById("list");
+const nameInput = document.getElementById("name");
+const categoryInput = document.getElementById("category");
+const descriptionInput = document.getElementById("description");
+const binInput = document.getElementById("bin");
+const searchInput = document.getElementById("search");
 
-  // Redirect if not logged in
-  auth.onAuthStateChanged(user => {
-    if (!user) window.location.href = "index.html";
-    else loadCutters(user.uid);
-  });
+let cuttersData = [];
+let sortColumn = null;
+let sortAsc = true;
 
-  // Load cookie cutters
-  function loadCutters(uid) {
-    db.collection("cookieCutters")
-      .where("userId", "==", uid)
-      .onSnapshot(snapshot => {
-        list.innerHTML = "";
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          list.innerHTML += `
-            <div class="item">
-              <strong>${d.name}</strong><br/>
-              <small>${d.category || ""}</small><br/>
-              ${d.description || ""}<br/>
-              <em>${d.bin || ""}</em><br/>
-              <button onclick="deleteItem('${doc.id}')">Delete</button>
-            </div>
-          `;
-        });
+// Redirect if not logged in
+auth.onAuthStateChanged(user => {
+  if (!user) window.location.href = "index.html";
+  else loadCutters(user.uid);
+});
+
+// Load cookie cutters
+function loadCutters(uid) {
+  db.collection("cookieCutters")
+    .where("userId", "==", uid)
+    .onSnapshot(snapshot => {
+      cuttersData = [];
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        d.id = doc.id;
+        cuttersData.push(d);
       });
-  }
-
-  // Add cookie cutter
-  addForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    db.collection("cookieCutters").add({
-      userId: user.uid,
-      name: nameInput.value,
-      category: categoryInput.value,
-      description: descriptionInput.value,
-      bin: binInput.value
-    }).then(() => {
-      addForm.reset();
-    }).catch(err => {
-      console.error(err);
-      alert("Error adding cookie cutter: " + err.message);
+      renderList(cuttersData);
     });
+}
+
+// Render table rows with optional search highlight
+function renderList(data) {
+  const term = searchInput.value.toLowerCase();
+  list.innerHTML = "";
+  data.forEach(d => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${highlightMatch(d.name, term)}</td>
+      <td>${highlightMatch(d.category || "", term)}</td>
+      <td>${highlightMatch(d.description || "", term)}</td>
+      <td>${highlightMatch(d.bin || "", term)}</td>
+      <td>
+        <button onclick="editItem('${d.id}')">Edit</button>
+        <button onclick="deleteItem('${d.id}')">Delete</button>
+      </td>
+    `;
+    list.appendChild(row);
   });
+}
 
-  // Delete cookie cutter
-  function deleteItem(id) {
-    db.collection("cookieCutters").doc(id).delete();
-  }
+// Highlight search matches
+function highlightMatch(text, term) {
+  if (!term) return text;
+  const re = new RegExp(`(${term})`, "gi");
+  return text.replace(re, '<span class="highlight">$1</span>');
+}
 
-  // Logout
-  function logout() {
-    auth.signOut();
-  }
+// Add cookie cutter
+addForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return;
+
+  db.collection("cookieCutters").add({
+    userId: user.uid,
+    name: nameInput.value,
+    category: categoryInput.value,
+    description: descriptionInput.value,
+    bin: binInput.value
+  }).then(() => addForm.reset())
+    .catch(err => { console.error(err); alert("Error adding cookie cutter: " + err.message); });
+});
+
+// Delete cookie cutter
+function deleteItem(id) {
+  db.collection("cookieCutters").doc(id).delete();
+}
+
+// Edit cookie cutter
+function editItem(id) {
+  const item = cuttersData.find(c => c.id === id);
+  if (!item) return;
+  const newName = prompt("Name:", item.name);
+  if (newName === null) return;
+  const newCategory = prompt("Category:", item.category || "");
+  const newDescription = prompt("Description:", item.description || "");
+  const newBin = prompt("Bin:", item.bin || "");
+
+  db.collection("cookieCutters").doc(id).update({
+    name: newName,
+    category: newCategory,
+    description: newDescription,
+    bin: newBin
+  });
+}
+
+// Search/filter
+searchInput.addEventListener("input", () => {
+  const term = searchInput.value.toLowerCase();
+  const filtered = cuttersData.filter(c =>
+    c.name.toLowerCase().includes(term) ||
+    (c.category || "").toLowerCase().includes(term) ||
+    (c.description || "").toLowerCase().includes(term) ||
+    (c.bin || "").toLowerCase().includes(term)
+  );
+  renderList(filtered);
+});
+
+// Column sorting
+document.querySelectorAll("th[data-column]").forEach(th => {
+  th.addEventListener("click", () => {
+    const column = th.dataset.column;
+    if (sortColumn === column) sortAsc = !sortAsc;
+    else { sortColumn = column; sortAsc = true; }
+    const sorted = [...cuttersData].sort((a, b) => {
+      const valA = (a[column] || "").toLowerCase();
+      const valB = (b[column] || "").toLowerCase();
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
+    });
+    renderList(sorted);
+  });
+});
+
+// Logout
+function logout() {
+  auth.signOut();
+}
 </script>
 
 </body>
