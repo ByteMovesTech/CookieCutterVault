@@ -68,18 +68,23 @@ th { background-color: #f8f8f8; }
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
-  authDomain: "cookiecuttervault.firebaseapp.com",
+ apiKey: "AIzaSyCNvc-KTRnSrQfU0lIkK9I-t4qSdx1cG4s",
+ authDomain: "cookiecuttervault.firebaseapp.com",
   projectId: "cookiecuttervault",
   storageBucket: "cookiecuttervault.firebasestorage.app",
   messagingSenderId: "900114441261",
   appId: "1:900114441261:web:fd4f37af79e928933344a4"
 };
-  
+
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Ensure login persists across reloads
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  .then(() => console.log("Auth persistence set to LOCAL"))
+  .catch(err => console.error(err));
 
 const addForm = document.getElementById("addForm");
 const list = document.getElementById("list");
@@ -93,10 +98,13 @@ let cuttersData = [];
 let sortColumn = null;
 let sortAsc = true;
 
-// Redirect if not logged in
+// Redirect if not logged in and load cutters
 auth.onAuthStateChanged(user => {
-  if (!user) window.location.href = "index.html";
-  else loadCutters(user.uid);
+  if (user && user.uid) {
+    loadCutters(user.uid);
+  } else {
+    window.location.href = "index.html";
+  }
 });
 
 // Load cookie cutters
@@ -114,7 +122,7 @@ function loadCutters(uid) {
     });
 }
 
-// Render table rows with optional search highlight
+// Render table rows with search highlight
 function renderList(data) {
   const term = searchInput.value.toLowerCase();
   list.innerHTML = "";
